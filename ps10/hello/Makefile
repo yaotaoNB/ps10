@@ -21,6 +21,7 @@ include ../include/Make_mpi.inc
 #-----------------------------------------------------------------
 # DO NOT DELETE THIS LINE -- make depend uses it
 # DEPENDENCIES MUST END AT END OF FILE
+getenv.o: getenv.cpp getenv.hpp
 hello.o: hello.cpp /sw/contrib/niac-src/ompi/4.1.1/include/mpi.h \
  /sw/contrib/niac-src/ompi/4.1.1/include/mpi_portable_platform.h \
  /sw/contrib/niac-src/ompi/4.1.1/include/openmpi/ompi/mpi/cxx/mpicxx.h \
