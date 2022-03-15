@@ -1,6 +1,6 @@
 //
-// This file is part of the course materials for AMATH 483/583 at the University of Washington
-// Spring 2020
+// This file is part of the course materials for CSE P 524 at the University of Washington
+// Winter 2022
 //
 // Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License
 // https://creativecommons.org/licenses/by-nc-sa/4.0/
@@ -85,6 +85,7 @@ int main(int argc, char* argv[]) {
 
   std::vector<double> local_x(num_elements);
   std::vector<double> x(0);
+  double rho = std::sqrt(std::inner_product(x.begin(), x.end(), x.begin(), 0.0)); // get sequential result on Rank 0
 
   // 
   // Write me -- the contents of vector x should be randomized and scattered to all ranks

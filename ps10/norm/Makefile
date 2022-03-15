@@ -51,7 +51,7 @@ mpi_norm.o: mpi_norm.cpp /sw/contrib/niac-src/ompi/4.1.1/include/mpi.h \
  /sw/contrib/niac-src/ompi/4.1.1/include/openmpi/ompi/mpi/cxx/info_inln.h \
  /sw/contrib/niac-src/ompi/4.1.1/include/openmpi/ompi/mpi/cxx/win_inln.h \
  /sw/contrib/niac-src/ompi/4.1.1/include/openmpi/ompi/mpi/cxx/file_inln.h \
- ../include/Timer.hpp
+ ../include/Timer.hpp norms.hpp
 omp_norm.o: omp_norm.cpp norm_utils.hpp norms.hpp ../include/Timer.hpp
 sequential_norm.o: sequential_norm.cpp norms.hpp ../include/Timer.hpp \
  norm_utils.hpp
