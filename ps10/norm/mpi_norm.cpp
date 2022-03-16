@@ -25,9 +25,8 @@
 #include <time.h>
 
 
+// this function instead will sum up the square of each element in the current process's local_x
 double mpi_norm(const std::vector<double>& local_x) {
-  // Write me -- compute local sum of squares and then REDUCE 
-  // ALL ranks should get the same global_rho  (that was a hint)
 
   double sum = 0.0;
 
@@ -64,6 +63,7 @@ size_t num_trials(size_t base_size, size_t nnz) {
   return 5 + static_cast<size_t>(N_1k);
 }
 
+// this function use current time as seed to randomize elements in the array of size num_elements
 std::vector<double> gen_rand_vec(size_t num_elements){
 
   std::vector<double> res(num_elements, 0);
@@ -73,6 +73,7 @@ std::vector<double> gen_rand_vec(size_t num_elements){
 
 }
 
+// for computing the sum of the global gather array after we get the local sigma result from each process
 double compute_sum(std::vector<double> sigmas){
   double sum = 0.0;
   for(auto ptr = sigmas.begin(); ptr != sigmas.end(); ++ptr)
@@ -92,6 +93,7 @@ int main(int argc, char* argv[]) {
   size_t num_trips          = 32;
   size_t num_elements 	    = 0;
 
+  // this is the original big global array where we'll randomize each element
   std::vector<double> global_x;
 
   if (0 == myrank) {
@@ -110,35 +112,33 @@ int main(int argc, char* argv[]) {
 
   MPI::COMM_WORLD.Bcast(&num_elements, 1, MPI::UNSIGNED_LONG, 0);
   MPI::COMM_WORLD.Bcast(&num_trips, 1, MPI::UNSIGNED_LONG, 0);
-  
-  // 
-  // Write me -- the contents of vector x should be randomized and scattered to all ranks
-  //
 
+  // each process will receive their own protion of local_x by Scatter
   std::vector<double> local_x(num_elements);
-  // std::vector<double> x(0);
 
+  // here we use scatter to distribute the big array 
   MPI_Scatter(global_x.data(), num_elements, MPI_DOUBLE, local_x.data(), num_elements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   double sigma = 0.0;
   
+  // init timer, but only start timer at the root rank
   DEF_TIMER(mpi_norm);
 
   if (myrank == 0) {
     START_TIMER(mpi_norm);
   }
   
+  // compute the sigma (square sum) of the local array
   for (size_t i = 0; i < num_trips; ++i)
     sigma = mpi_norm(local_x);
 
   if(myrank == 0)
     STOP_TIMER(mpi_norm);
 
+  // this is the array where we store all sum results from each process
   auto sub_sigmas = std::vector<double>(mysize, 0);
 
-  // if(myrank == 0)
-  //   sub_sigmas = (double*)malloc(sizeof(double) * mysize);
-
+  // gathter the sum result before square root and store them into sub_sigmas at rank 0
   MPI_Gather(&sigma, 1, MPI_DOUBLE, sub_sigmas.data(), 1, MPI_DOUBLE, 0,
            MPI_COMM_WORLD);
 
@@ -146,25 +146,17 @@ int main(int argc, char* argv[]) {
 
     double rho = std::sqrt(std::inner_product(global_x.begin(), global_x.end(), global_x.begin(), 0.0)); // get sequential result on Rank 0
 
-    double sigma_avg = std::sqrt(compute_sum(sub_sigmas));
-
-    // for (size_t i = 0; i < num_trips; ++i) {
-    //   sigma = mpi_norm(local_x);
-    // }
+    // sum the global sum array and square root the final result at rank 0 then compare with ground truth
+    double sigma_global = std::sqrt(compute_sum(sub_sigmas));
 
     double ms_per = t_mpi_norm.elapsed() / static_cast<double>(num_trips);
     std::cout << "# msec_per norm [mpi_norm]: " << ms_per << std::endl;
     double gflops = 2.0 * num_trips * num_elements * mysize / 1.e9;
     double gflops_sec = gflops / (t_mpi_norm.elapsed() * 1.e-3);
     std::cout << "# gflops / sec [mpi_norm]: " << gflops_sec << std::endl;
-    std::cout << "# | rho - sigma | = " << std::abs((rho-sigma_avg)/sigma_avg) << std::endl;
+    std::cout << "# | rho - sigma | = " << std::abs((rho-sigma_global)/sigma_global) << std::endl;
 
   } 
-  // else {
-  //   for (size_t i = 0; i < num_trips; ++i) {
-  //     sigma = mpi_norm(local_x);
-  //   }
-  // }
   
   MPI::Finalize();
   
