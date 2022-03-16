@@ -8,7 +8,7 @@
 // Author: Andrew Lumsdaine
 //
 
-#include "Timer.hpp"
+#include "../include/Timer.hpp"
 #include "coordinate.hpp"
 #include <cmath>
 #include <functional>
@@ -156,6 +156,8 @@ void accumulate_fields(std::vector<body<T>>& bodies) {
 
   // Every process send their bodies to every other
   /* Write me */
+  MPI::COMM_WORLD.Bcast(bodies.data(), (int)bodies.size(), make_body_type(), 0);
+
 }
 
 template <typename T, typename TimeType>
